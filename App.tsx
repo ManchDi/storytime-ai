@@ -10,6 +10,7 @@ import Controls from './components/Controls';
 import ApiKeyBanner from './components/ApiKeyBanner';
 import { SparklesIcon } from '@heroicons/react/24/solid';
 import { generateStoryPDF } from './services/pdfService';
+import DownloadModal from './components/DownloadModal';
 
 const App: React.FC = () => {
   // ── Screen management ──────────────────────────────────────────────────────
@@ -23,7 +24,9 @@ const App: React.FC = () => {
   const [isLoadingTTS, setIsLoadingTTS] = useState(false);
   const [isReading, setIsReading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [isSavingPDF, setIsSavingPDF] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [isGeneratingAll, setIsGeneratingAll] = useState(false);
+  const [generatingProgress, setGeneratingProgress] = useState(0);
 
   // ── API key / quota ────────────────────────────────────────────────────────
   const [userApiKey, setUserApiKey] = useState<string | undefined>(undefined);
@@ -300,16 +303,73 @@ const App: React.FC = () => {
   }, [storyPages, currentPageIndex]);
 
   // ── Save as PDF ────────────────────────────────────────────────────────────
-  const handleSavePDF = useCallback(async () => {
+  const handleSavePDF = useCallback(() => {
+    setShowDownloadModal(true);
+  }, []);
+
+  const handleDownloadNow = useCallback(async () => {
     if (!storyConfig) return;
-    setIsSavingPDF(true);
     try {
       await generateStoryPDF(storyPages, storyConfig);
     } catch (error) {
       console.error('PDF generation failed:', error);
       alert('Sorry, PDF generation failed. Please try again.');
     } finally {
-      setIsSavingPDF(false);
+      setShowDownloadModal(false);
+    }
+  }, [storyPages, storyConfig]);
+
+  const handleGenerateAllAndDownload = useCallback(async () => {
+    if (!storyConfig) return;
+    setIsGeneratingAll(true);
+
+    // Build complete pages list, generating any missing ones
+    let allPages = [...storyPages];
+    setGeneratingProgress(allPages.filter(p => p.text && !p.isGenerating).length);
+
+    for (let i = 0; i < storyConfig.pageCount; i++) {
+      if (allPages[i]?.text && !allPages[i]?.isGenerating) {
+        // Already ready
+        continue;
+      }
+      try {
+        const previousTexts = allPages.slice(0, i).map(p => p.text).filter(Boolean);
+        const { text, imagePrompt } = await generateStoryPage(storyConfig, i, previousTexts);
+
+        // Generate image too
+        let imageUrl: string | undefined;
+        try {
+          imageUrl = await generateImage(imagePrompt);
+        } catch {
+          // Continue without image if it fails
+        }
+
+        const newPage = { id: i + 1, text, imagePrompt, imageUrl };
+        allPages = [...allPages.slice(0, i), newPage, ...allPages.slice(i + 1)];
+
+        // Update visible story pages too
+        setStoryPages(prev => {
+          const updated = [...prev];
+          updated[i] = newPage;
+          return updated;
+        });
+
+        setGeneratingProgress(i + 1);
+      } catch (error) {
+        console.error(`Failed to generate page ${i + 1}:`, error);
+      }
+    }
+
+    // Now generate the PDF
+    try {
+      await generateStoryPDF(allPages, storyConfig);
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+      alert('Sorry, PDF generation failed. Please try again.');
+    } finally {
+      setIsGeneratingAll(false);
+      setShowDownloadModal(false);
+      setGeneratingProgress(0);
     }
   }, [storyPages, storyConfig]);
 
@@ -375,9 +435,20 @@ const App: React.FC = () => {
           hasNext={hasNext}
           isImageLoading={isLoadingImage}
           isPageGenerating={!!currentPage?.isGenerating}
-          isSavingPDF={isSavingPDF}
+          isSavingPDF={isGeneratingAll || showDownloadModal}
         />
       </footer>
+      {showDownloadModal && storyConfig && (
+        <DownloadModal
+          readyCount={storyPages.filter(p => p.text && p.imageUrl && !p.isGenerating).length}
+          totalCount={storyConfig.pageCount}
+          isGeneratingAll={isGeneratingAll}
+          generatingProgress={generatingProgress}
+          onDownloadNow={handleDownloadNow}
+          onGenerateAll={handleGenerateAllAndDownload}
+          onClose={() => setShowDownloadModal(false)}
+        />
+      )}
     </div>
   );
 };
