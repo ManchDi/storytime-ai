@@ -53,12 +53,10 @@ export const generateImage = async (
   prompt: string,
   userApiKey?: string
 ): Promise<string> => {
-  // Pollinations.ai is free with no API key — build the URL directly
-  // userApiKey is ignored for images since no key is needed
-  const encoded = encodeURIComponent(
-    `children's storybook illustration, whimsical, colorful, cartoon style: ${prompt}`
-  );
-  return `https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&nologo=true&seed=${Date.now()}`;
+  // For the proxy path, HuggingFace handles image gen — userApiKey not needed for images
+  const res = await callProxy("generate-image", { prompt });
+  const { imageBytes, mimeType } = await res.json();
+  return `data:${mimeType};base64,${imageBytes}`;
 };
 
 export const generateSpeech = async (
