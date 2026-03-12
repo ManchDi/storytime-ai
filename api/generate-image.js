@@ -8,11 +8,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'prompt is required' });
   }
 
-  const fullPrompt = `children's storybook illustration, whimsical, colorful, cartoon style: ${prompt}`;
+  const fullPrompt = `children's book illustration, watercolor painting style, soft colors, hand-drawn, whimsical and cute, 2D flat art: ${prompt}`;
 
   try {
     const response = await fetch(
-      'https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-2-1',
+      'https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell',
       {
         method: 'POST',
         headers: {
