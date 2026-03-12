@@ -42,6 +42,17 @@ async function callProxy(endpoint: string, body: object): Promise<Response> {
   return res;
 }
 
+// ─── Theme generation ─────────────────────────────────────────────────────────
+
+export const generateTheme = async (
+  childName: string,
+  previousThemes: string[]
+): Promise<string> => {
+  const res = await callProxy('generate-theme', { childName, previousThemes });
+  const data = await res.json();
+  return data.theme;
+};
+
 // ─── Story generation ─────────────────────────────────────────────────────────
 
 export const generateStoryPage = async (

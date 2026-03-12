@@ -68,6 +68,54 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // ── Prefetch next 2 pages in background ───────────────────────────────────
+  const prefetchPages = useCallback(async (
+    config: StoryConfig,
+    currentIndex: number,
+    pages: StoryPage[]
+  ) => {
+    const targets = [currentIndex + 1, currentIndex + 2].filter(
+      i => i < config.pageCount && !pages[i]
+    );
+
+    for (const targetIndex of targets) {
+      // Mark as generating
+      setStoryPages(prev => {
+        if (prev[targetIndex]) return prev;
+        const updated = [...prev];
+        updated[targetIndex] = { id: targetIndex + 1, text: '', imagePrompt: '', isGenerating: true };
+        return updated;
+      });
+
+      try {
+        const currentPages = storyPages.slice(0, targetIndex);
+        const previousTexts = currentPages.map(p => p.text).filter(Boolean);
+        const newPage = await generateNextPage(config, targetIndex, currentPages);
+        if (!newPage) continue;
+
+        setStoryPages(prev => {
+          const updated = [...prev];
+          updated[targetIndex] = newPage;
+          return updated;
+        });
+
+        // Also prefetch the image in background
+        generateImage(newPage.imagePrompt).then(imageUrl => {
+          setStoryPages(prev => {
+            const updated = [...prev];
+            if (updated[targetIndex]) {
+              updated[targetIndex] = { ...updated[targetIndex], imageUrl };
+            }
+            return updated;
+          });
+        }).catch(err => console.error('Background image prefetch failed:', err));
+
+      } catch (error) {
+        console.error(`Prefetch failed for page ${targetIndex}:`, error);
+      }
+    }
+  }, [storyPages, generateNextPage]);
+
   // ── Story generation ───────────────────────────────────────────────────────
   const loadImageForPage = useCallback(async (pageIndex: number, pages: StoryPage[]) => {
     if (pages[pageIndex]?.imageUrl) return;
@@ -120,8 +168,9 @@ const App: React.FC = () => {
     setStoryPages(initialPages);
     setScreen('story');
 
-    // Load first page image
+    // Load first page image then prefetch page 2
     await loadImageForPage(0, initialPages);
+    prefetchPages(config, 0, initialPages);
   }, [generateNextPage, loadImageForPage]);
 
   // ── Navigation ─────────────────────────────────────────────────────────────
@@ -152,9 +201,11 @@ const App: React.FC = () => {
       });
 
       await loadImageForPage(nextIndex, [...storyPages.slice(0, nextIndex), newPage]);
+      prefetchPages(storyConfig, nextIndex, [...storyPages.slice(0, nextIndex), newPage]);
     } else {
       setCurrentPageIndex(nextIndex);
       await loadImageForPage(nextIndex, storyPages);
+      prefetchPages(storyConfig, nextIndex, storyPages);
     }
   }, [currentPageIndex, storyConfig, storyPages, stopReading, handleStopRecording, generateNextPage, loadImageForPage]);
 
