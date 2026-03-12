@@ -53,22 +53,12 @@ export const generateImage = async (
   prompt: string,
   userApiKey?: string
 ): Promise<string> => {
-  // Direct path: user supplied their own key
-  if (userApiKey) {
-    const ai = new GoogleGenAI({ apiKey: userApiKey });
-    const response = await ai.models.generateImages({
-      model: "imagen-4.0-generate-001",
-      prompt,
-      config: { numberOfImages: 1, outputMimeType: "image/jpeg", aspectRatio: "1:1" },
-    });
-    const bytes = response.generatedImages[0].image.imageBytes;
-    return `data:image/jpeg;base64,${bytes}`;
-  }
-
-  // Proxy path
-  const res = await callProxy("generate-image", { prompt });
-  const { imageUrl } = await res.json();
-  return imageUrl;
+  // Pollinations.ai is free with no API key — build the URL directly
+  // userApiKey is ignored for images since no key is needed
+  const encoded = encodeURIComponent(
+    `children's storybook illustration, whimsical, colorful, cartoon style: ${prompt}`
+  );
+  return `https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&nologo=true&seed=${Date.now()}`;
 };
 
 export const generateSpeech = async (
