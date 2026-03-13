@@ -185,7 +185,7 @@ const Controls: React.FC<ControlsProps> = ({
           disabled={!hasPrev || isBusy || isAnyActive}
           className="bg-pink-500 hover:bg-pink-600 focus:ring-pink-300"
         >
-          <ChevronLeftIcon className="h-5 w-5" /> Prev
+          <ChevronLeftIcon className="h-5 w-5" /> <span className="hidden sm:inline">Prev</span>
         </ControlButton>
 
         {/* Read — split button */}
@@ -199,7 +199,7 @@ const Controls: React.FC<ControlsProps> = ({
           onOption1={onReadAloud}
           onOption2={onReadAll}
           dropdownDisabled={isBusy || isRecording || isRecordingAll || isReading || isPlayingAll}
-          width="w-32"
+          width="w-24 sm:w-32"
         />
 
         {/* Record — split button + delete */}
@@ -214,7 +214,7 @@ const Controls: React.FC<ControlsProps> = ({
             onOption1={onToggleRecording}
             onOption2={onRecordAll}
             dropdownDisabled={isBusy || isReading || isPlayingAll || isLoadingTTS || isRecording || isRecordingAll}
-            width="w-36"
+            width="w-28 sm:w-36"
           />
           {hasRecording && !isRecording && !isRecordingAll && (
             <button
@@ -234,7 +234,7 @@ const Controls: React.FC<ControlsProps> = ({
           disabled={!hasNext || isBusy || isAnyActive}
           className="bg-pink-500 hover:bg-pink-600 focus:ring-pink-300"
         >
-          Next <ChevronRightIcon className="h-5 w-5" />
+          <span className="hidden sm:inline">Next</span> <ChevronRightIcon className="h-5 w-5" />
         </ControlButton>
       </div>
 

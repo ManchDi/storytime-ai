@@ -220,7 +220,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onGenerate, savedSessions, onCo
         )}
 
         {/* Form */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-lg border border-purple-200 p-6 space-y-5">
+        <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-lg border border-purple-200 p-4 sm:p-6 space-y-5">
 
           {/* Child's name */}
           <div>
@@ -323,7 +323,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onGenerate, savedSessions, onCo
           {/* Page count */}
           <div>
             <label className="block text-sm font-semibold text-gray-600 mb-2">Story length</label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {([5, 10, 15, 20] as const).map(count => (
                 <button
                   key={count}

@@ -633,7 +633,7 @@ const handleGoHome = useCallback(() => {
   const currentPage = storyPages[currentPageIndex];
   const hasNext = storyConfig ? currentPageIndex < storyConfig.pageCount - 1 : false;
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 text-gray-800 p-4 sm:p-6 md:p-8 flex flex-col items-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 text-gray-800 p-3 sm:p-6 md:p-8 flex flex-col items-center">
 
       {/* Quota banner */}
       {showApiKeyBanner && (

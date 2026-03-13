@@ -20,7 +20,7 @@ const ImagePlaceholder: React.FC<{ isGenerating?: boolean }> = ({ isGenerating }
 
 const StoryViewer: React.FC<StoryViewerProps> = ({ page, isLoadingImage, pageIndex, pageCount, generateImages }) => {
   return (
-    <div className={`grid gap-8 w-full bg-white/70 backdrop-blur-sm p-6 rounded-3xl shadow-lg border border-purple-200
+    <div className={`grid gap-6 sm:gap-8 w-full bg-white/70 backdrop-blur-sm p-4 sm:p-6 rounded-3xl shadow-lg border border-purple-200
       ${generateImages ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}
     >
       {/* Image — only shown when images are enabled */}
@@ -39,7 +39,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ page, isLoadingImage, pageInd
       )}
 
       {/* Text */}
-      <div className={`flex flex-col justify-between bg-purple-50/50 p-6 rounded-2xl
+      <div className={`flex flex-col justify-between bg-purple-50/50 p-4 sm:p-6 rounded-2xl
         ${!generateImages ? 'min-h-48' : ''}`}
       >
         <div className="flex-1 flex items-center justify-center">
