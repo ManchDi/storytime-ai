@@ -91,12 +91,7 @@ const RecordAllModal: React.FC<RecordAllModalProps> = ({
       mediaRecorderRef.current.ondataavailable = e => audioChunksRef.current.push(e.data);
       mediaRecorderRef.current.onstop = () => {
         const url = URL.createObjectURL(new Blob(audioChunksRef.current, { type: 'audio/webm' }));
-        setRecordings(r => {
-          const updated = { ...r, [modalPageIdx]: url };
-          // Auto-save every completed recording immediately to App
-          onRecordingsSaved(updated);
-          return updated;
-        });
+        setRecordings(r => ({ ...r, [modalPageIdx]: url }));
         setSkipped(s => { const next = new Set(s); next.delete(modalPageIdx); return next; });
         stream.getTracks().forEach(t => t.stop());
         setRecordState('done');
@@ -263,28 +258,41 @@ const RecordAllModal: React.FC<RecordAllModalProps> = ({
                   <ChevronLeftIcon className="w-4 h-4" /> Prev
                 </button>
 
-                {recordState === 'recording' ? (
+                <div className="flex-1 flex items-center gap-2">
+                  {recordState === 'recording' ? (
+                    <button
+                      onClick={handleStopRecording}
+                      className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-full shadow-md transition-colors"
+                    >
+                      <StopIcon className="w-5 h-5" />
+                      Stop
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleStartRecording}
+                      disabled={isGenerating || !!currentPage?.isGenerating}
+                      className={`flex-1 flex items-center justify-center gap-2 py-3 font-bold rounded-full shadow-md transition-all
+                        ${recordings[modalPageIdx]
+                          ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                          : 'bg-purple-500 hover:bg-purple-600 text-white hover:scale-105 transform'
+                        } disabled:bg-gray-300 disabled:cursor-not-allowed disabled:scale-100`}
+                    >
+                      <MicrophoneIcon className="w-5 h-5" />
+                      {recordings[modalPageIdx] ? 'Re-record' : 'Record'}
+                    </button>
+                  )}
+
+                  {/* Save button — always visible, disabled while recording or nothing recorded yet */}
                   <button
-                    onClick={handleStopRecording}
-                    className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-full shadow-md transition-colors"
+                    onClick={() => { onRecordingsSaved(recordings); onClose(); }}
+                    disabled={recordedCount === 0 || recordState === 'recording'}
+                    title={recordedCount === 0 ? 'Record at least one page first' : `Save ${recordedCount} recording${recordedCount !== 1 ? 's' : ''} and close`}
+                    className="flex items-center justify-center gap-1.5 px-3 py-3 rounded-full bg-green-500 hover:bg-green-600 text-white font-semibold text-sm transition-colors shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-gray-300"
                   >
-                    <StopIcon className="w-5 h-5" />
-                    Stop recording
+                    <CheckCircleIcon className="w-5 h-5" />
+                    Save
                   </button>
-                ) : (
-                  <button
-                    onClick={handleStartRecording}
-                    disabled={isGenerating || !!currentPage?.isGenerating}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 font-bold rounded-full shadow-md transition-all
-                      ${recordings[modalPageIdx]
-                        ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                        : 'bg-purple-500 hover:bg-purple-600 text-white hover:scale-105 transform'
-                      } disabled:bg-gray-300 disabled:cursor-not-allowed disabled:scale-100`}
-                  >
-                    <MicrophoneIcon className="w-5 h-5" />
-                    {recordings[modalPageIdx] ? 'Re-record' : 'Record'}
-                  </button>
-                )}
+                </div>
 
                 {modalPageIdx < totalPages - 1 ? (
                   <button
@@ -302,17 +310,6 @@ const RecordAllModal: React.FC<RecordAllModalProps> = ({
                   </button>
                 )}
               </div>
-
-              {/* Save recordings early — visible whenever at least 1 recording exists */}
-              {recordedCount > 0 && recordState !== 'recording' && (
-                <button
-                  onClick={() => { onRecordingsSaved(recordings); onClose(); }}
-                  className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-sm hover:opacity-90 transition-opacity shadow"
-                >
-                  <CheckCircleIcon className="w-4 h-4" />
-                  Save {recordedCount} recording{recordedCount !== 1 ? 's' : ''} &amp; close
-                </button>
-              )}
             </div>
           </>
       </div>
