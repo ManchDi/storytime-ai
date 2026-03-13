@@ -171,7 +171,6 @@ const App: React.FC = () => {
   const prefetchPages = useCallback(async (
     config: StoryConfig, currentIndex: number, pages: StoryPage[]
   ) => {
-    if (!config.generateImages) return; // no prefetch needed if text-only
     const targets = [currentIndex + 1, currentIndex + 2].filter(
       i => i < config.pageCount && !pages[i]
     );
@@ -190,13 +189,15 @@ const App: React.FC = () => {
           updated[targetIndex] = newPage;
           return updated;
         });
-        generateImage(newPage.imagePrompt).then(imageUrl => {
-          setStoryPages(prev => {
-            const updated = [...prev];
-            if (updated[targetIndex]) updated[targetIndex] = { ...updated[targetIndex], imageUrl };
-            return updated;
-          });
-        }).catch(err => console.error('Background image prefetch failed:', err));
+        if (config.generateImages) {
+          generateImage(newPage.imagePrompt).then(imageUrl => {
+            setStoryPages(prev => {
+              const updated = [...prev];
+              if (updated[targetIndex]) updated[targetIndex] = { ...updated[targetIndex], imageUrl };
+              return updated;
+            });
+          }).catch(err => console.error('Background image prefetch failed:', err));
+        }
       } catch (error) {
         console.error(`Prefetch failed for page ${targetIndex}:`, error);
       }
@@ -427,8 +428,8 @@ const handleGoHome = useCallback(() => {
       }
       if (playAllStopRef.current) break;
 
-      // 200ms pause between pages then advance
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Play the page
+      await playSinglePage(pageIdx);
       if (playAllStopRef.current) break;
 
       pageIdx++;
@@ -550,7 +551,14 @@ const handleGoHome = useCallback(() => {
     const config = overrideConfig ?? storyConfig;
     if (!config) return;
     setIsGeneratingAll(true);
-    let allPages = [...(overridePages ?? storyPages)];
+    // Merge override pages with live storyPagesRef so background-resolved
+    // images (from prefetch) are not lost when called from home screen
+    const livePages = storyPagesRef.current;
+    const basePagesRaw = overridePages ?? storyPages;
+    const basePages = basePagesRaw.map((p, i) =>
+      livePages[i]?.imageUrl && !p.imageUrl ? { ...p, imageUrl: livePages[i].imageUrl } : p
+    );
+    let allPages = [...basePages];
     setGeneratingProgress(allPages.filter(p => p.text && !p.isGenerating).length);
 
     for (let i = 0; i < config.pageCount; i++) {
@@ -598,7 +606,8 @@ const handleGoHome = useCallback(() => {
       setStoryPages(session.pages);
       setCurrentPageIndex(session.currentPageIndex);
       setScreen('story');
-      // Pass session data directly — avoids stale closure race condition
+      // Use session.pages as starting point; handleGenerateAllAndDownload will
+      // fill gaps and use storyPagesRef for any already-resolved images
       await handleGenerateAllAndDownload(session.pages, session.config);
     }
   }, [handleGenerateAllAndDownload]);

@@ -34,7 +34,6 @@ const RecordAllModal: React.FC<RecordAllModalProps> = ({
   const [recordings, setRecordings] = useState<Record<number, string>>({});
   const [skipped, setSkipped] = useState<Set<number>>(new Set());
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isDone, setIsDone] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -92,7 +91,12 @@ const RecordAllModal: React.FC<RecordAllModalProps> = ({
       mediaRecorderRef.current.ondataavailable = e => audioChunksRef.current.push(e.data);
       mediaRecorderRef.current.onstop = () => {
         const url = URL.createObjectURL(new Blob(audioChunksRef.current, { type: 'audio/webm' }));
-        setRecordings(r => ({ ...r, [modalPageIdx]: url }));
+        setRecordings(r => {
+          const updated = { ...r, [modalPageIdx]: url };
+          // Auto-save every completed recording immediately to App
+          onRecordingsSaved(updated);
+          return updated;
+        });
         setSkipped(s => { const next = new Set(s); next.delete(modalPageIdx); return next; });
         stream.getTracks().forEach(t => t.stop());
         setRecordState('done');
@@ -121,13 +125,15 @@ const RecordAllModal: React.FC<RecordAllModalProps> = ({
     }
 
     if (modalPageIdx >= totalPages - 1) {
-      setIsDone(true);
+      // Last page — save whatever we have and close immediately
+      onRecordingsSaved(recordings);
+      onClose();
       return;
     }
     setRecordState(recordings[modalPageIdx + 1] ? 'done' : 'idle');
     setModalPageIdx(i => i + 1);
     setRecordingTime(0);
-  }, [modalPageIdx, totalPages, recordState, recordings, handleStopRecording]);
+  }, [modalPageIdx, totalPages, recordState, recordings, handleStopRecording, onRecordingsSaved, onClose]);
 
   const handlePrev = useCallback(() => {
     if (recordState === 'recording') handleStopRecording();
@@ -136,11 +142,6 @@ const RecordAllModal: React.FC<RecordAllModalProps> = ({
     setModalPageIdx(i => i - 1);
     setRecordingTime(0);
   }, [modalPageIdx, recordState, recordings, handleStopRecording]);
-
-  const handleFinish = useCallback(() => {
-    onRecordingsSaved(recordings);
-    onClose();
-  }, [recordings, onRecordingsSaved, onClose]);
 
   const currentPage = localPages[modalPageIdx];
   const recordedCount = Object.keys(recordings).length;
@@ -172,33 +173,7 @@ const RecordAllModal: React.FC<RecordAllModalProps> = ({
           </button>
         </div>
 
-        {isDone ? (
-          /* All Done screen */
-          <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
-              <CheckCircleIcon className="w-10 h-10 text-green-500" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-700 mb-2">All done!</h3>
-            <p className="text-gray-500 mb-1">
-              <span className="font-semibold text-purple-600">{recordedCount} page{recordedCount !== 1 ? 's' : ''}</span> recorded.
-            </p>
-            {skippedCount > 0 ? (
-              <p className="text-sm text-amber-500 mb-6">
-                {skippedCount} page{skippedCount !== 1 ? 's were' : ' was'} skipped — they'll use AI voice.
-              </p>
-            ) : (
-              <p className="text-sm text-gray-400 mb-6">Your voice will play on every page.</p>
-            )}
-            <button
-              onClick={handleFinish}
-              className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl shadow-md hover:scale-105 transform transition-transform"
-            >
-              Save recordings
-            </button>
-          </div>
-
-        ) : (
-          <>
+        <>
             {/* Progress tracker */}
             <div className="px-6 pt-4">
               {showDots ? (
@@ -327,9 +302,19 @@ const RecordAllModal: React.FC<RecordAllModalProps> = ({
                   </button>
                 )}
               </div>
+
+              {/* Save recordings early — visible whenever at least 1 recording exists */}
+              {recordedCount > 0 && recordState !== 'recording' && (
+                <button
+                  onClick={() => { onRecordingsSaved(recordings); onClose(); }}
+                  className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-sm hover:opacity-90 transition-opacity shadow"
+                >
+                  <CheckCircleIcon className="w-4 h-4" />
+                  Save {recordedCount} recording{recordedCount !== 1 ? 's' : ''} &amp; close
+                </button>
+              )}
             </div>
           </>
-        )}
       </div>
     </div>
   );
