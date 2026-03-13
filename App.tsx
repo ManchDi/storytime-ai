@@ -580,7 +580,7 @@ const handleGoHome = useCallback(() => {
     }
 
     try {
-      await generateStoryPDF(allPages, storyConfig);
+      await generateStoryPDF(allPages, config);
     } catch (error) {
       console.error('PDF generation failed:', error);
       alert('Sorry, PDF generation failed. Please try again.');
@@ -632,9 +632,6 @@ const handleGoHome = useCallback(() => {
 
   const currentPage = storyPages[currentPageIndex];
   const hasNext = storyConfig ? currentPageIndex < storyConfig.pageCount - 1 : false;
-  const isAnyRecordMode = isRecording || isRecordingAll;
-  const isAnyPlayMode = isReading || isPlayingAll;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 text-gray-800 p-4 sm:p-6 md:p-8 flex flex-col items-center">
 
