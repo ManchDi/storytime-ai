@@ -246,25 +246,6 @@ const App: React.FC = () => {
     setAllSavedSessions(refreshed);
   }, []);
 
-  const handleDownloadSessionPDF = useCallback(async (session: SavedSession, visitedOnly: boolean) => {
-    if (visitedOnly) {
-      const pagesToDownload = session.pages.filter(p => p.text && !p.isGenerating);
-      try {
-        await generateStoryPDF(pagesToDownload, session.config);
-      } catch (error) {
-        console.error('PDF generation failed:', error);
-        alert('Sorry, PDF generation failed. Please try again.');
-      }
-    } else {
-      // Navigate to story screen so the user sees progress, then generate directly
-      setStoryConfig(session.config);
-      setStoryPages(session.pages);
-      setCurrentPageIndex(session.currentPageIndex);
-      setScreen('story');
-      // Pass session data directly — avoids stale closure race condition
-      await handleGenerateAllAndDownload(session.pages, session.config);
-    }
-  }, [handleGenerateAllAndDownload]);
 
   // ── Navigation ─────────────────────────────────────────────────────────────
   const handleNextPage = useCallback(async () => {
@@ -601,6 +582,26 @@ const handleGoHome = useCallback(() => {
       setGeneratingProgress(0);
     }
   }, [storyPages, storyConfig]);
+
+  const handleDownloadSessionPDF = useCallback(async (session: SavedSession, visitedOnly: boolean) => {
+    if (visitedOnly) {
+      const pagesToDownload = session.pages.filter(p => p.text && !p.isGenerating);
+      try {
+        await generateStoryPDF(pagesToDownload, session.config);
+      } catch (error) {
+        console.error('PDF generation failed:', error);
+        alert('Sorry, PDF generation failed. Please try again.');
+      }
+    } else {
+      // Navigate to story screen so the user sees progress, then generate directly
+      setStoryConfig(session.config);
+      setStoryPages(session.pages);
+      setCurrentPageIndex(session.currentPageIndex);
+      setScreen('story');
+      // Pass session data directly — avoids stale closure race condition
+      await handleGenerateAllAndDownload(session.pages, session.config);
+    }
+  }, [handleGenerateAllAndDownload]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
   if (screen === 'home') {
