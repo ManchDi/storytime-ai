@@ -264,12 +264,15 @@ const App: React.FC = () => {
     setCurrentPageIndex(prev => prev - 1);
   }, [currentPageIndex, stopReading, handleStopRecording]);
 
-  const handleGoHome = useCallback(() => {
-    stopReading();
-    handleStopRecording();
-    setScreen('home');
-    // Don't clear storyPages — session is saved
-  }, [stopReading, handleStopRecording]);
+const handleGoHome = useCallback(() => {
+  stopReading();
+  handleStopRecording();
+  if (storyConfig && storyPages.length > 0) {
+    saveSession(storyConfig, storyPages, currentPageIndex);
+    setSavedSession(loadSession()); 
+  }
+  setScreen('home');
+}, [stopReading, handleStopRecording, storyConfig, storyPages, currentPageIndex]);
 
   // ── Read aloud (single page) ───────────────────────────────────────────────
   const playSinglePage = useCallback(async (pageIndex: number): Promise<void> => {
