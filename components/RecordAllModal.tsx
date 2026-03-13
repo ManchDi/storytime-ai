@@ -145,24 +145,24 @@ const RecordAllModal: React.FC<RecordAllModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl flex flex-col overflow-hidden"
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-xl flex flex-col overflow-hidden"
            style={{ maxHeight: '90vh' }}>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-purple-100">
+        <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-purple-100 dark:border-purple-900/50">
           <div>
-            <h2 className="text-lg font-bold text-purple-700 flex items-center gap-2">
+            <h2 className="text-lg font-bold text-purple-700 dark:text-purple-300 flex items-center gap-2">
               <MicrophoneIcon className="w-5 h-5 text-purple-400" />
               Record your story
             </h2>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
               {recordedCount} of {totalPages} pages recorded
               {skippedCount > 0 && <span className="text-amber-500 ml-2">· {skippedCount} skipped</span>}
             </p>
           </div>
           <button
             onClick={() => { if (recordState === 'recording') handleStopRecording(); onClose(); }}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
@@ -188,7 +188,7 @@ const RecordAllModal: React.FC<RecordAllModalProps> = ({
                             ? 'w-3 h-3 bg-green-400'
                             : isSkippedPage
                             ? 'w-3 h-3 bg-amber-300'
-                            : 'w-3 h-3 bg-gray-200'
+                            : 'w-3 h-3 bg-gray-200 dark:bg-gray-600'
                         }`}
                       />
                     );
@@ -196,11 +196,11 @@ const RecordAllModal: React.FC<RecordAllModalProps> = ({
                 </div>
               ) : (
                 <div className="mb-3">
-                  <div className="flex justify-between text-xs text-gray-400 mb-1">
+                  <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mb-1">
                     <span>Page {modalPageIdx + 1} of {totalPages}</span>
                     <span>{Math.round((recordedCount / totalPages) * 100)}% recorded</span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                  <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                     <div
                       className="h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full transition-all duration-500"
                       style={{ width: `${(recordedCount / totalPages) * 100}%` }}
@@ -212,28 +212,28 @@ const RecordAllModal: React.FC<RecordAllModalProps> = ({
 
             {/* Page text */}
             <div className="flex-1 overflow-y-auto px-6 py-2">
-              <div className="bg-purple-50 rounded-2xl p-5 min-h-[120px] flex items-center justify-center">
+              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-5 min-h-[120px] flex items-center justify-center">
                 {isGenerating || currentPage?.isGenerating ? (
-                  <div className="flex flex-col items-center gap-2 text-purple-300">
+                  <div className="flex flex-col items-center gap-2 text-purple-300 dark:text-purple-500">
                     <SparklesIcon className="w-6 h-6 animate-pulse" />
                     <p className="text-sm">Writing page {modalPageIdx + 1}…</p>
                   </div>
                 ) : (
-                  <p className="text-gray-700 text-lg leading-relaxed text-center">
+                  <p className="text-gray-700 dark:text-gray-200 text-lg leading-relaxed text-center">
                     {currentPage?.text || ''}
                   </p>
                 )}
               </div>
 
               {skipped.has(modalPageIdx) && !recordings[modalPageIdx] && (
-                <div className="mt-3 flex items-center gap-2 text-amber-600 bg-amber-50 rounded-xl px-4 py-2.5 text-sm">
+                <div className="mt-3 flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-xl px-4 py-2.5 text-sm">
                   <ExclamationTriangleIcon className="w-4 h-4 flex-shrink-0" />
                   This page was skipped — AI voice will be used.
                 </div>
               )}
 
               {recordings[modalPageIdx] && recordState !== 'recording' && (
-                <div className="mt-3 flex items-center gap-2 text-green-600 bg-green-50 rounded-xl px-4 py-2.5 text-sm">
+                <div className="mt-3 flex items-center gap-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-xl px-4 py-2.5 text-sm">
                   <CheckCircleIcon className="w-4 h-4 flex-shrink-0" />
                   Page recorded! Press Record to re-record.
                 </div>
@@ -241,7 +241,7 @@ const RecordAllModal: React.FC<RecordAllModalProps> = ({
             </div>
 
             {/* Recording controls */}
-            <div className="px-6 pb-6 pt-4 border-t border-purple-100">
+            <div className="px-6 pb-6 pt-4 border-t border-purple-100 dark:border-purple-900/50">
               {recordState === 'recording' && (
                 <div className="flex items-center justify-center gap-2 mb-3 text-red-500">
                   <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
@@ -253,7 +253,7 @@ const RecordAllModal: React.FC<RecordAllModalProps> = ({
                 <button
                   onClick={handlePrev}
                   disabled={modalPageIdx === 0}
-                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-gray-100 text-gray-600 font-semibold text-sm hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <ChevronLeftIcon className="w-4 h-4" /> Prev
                 </button>
@@ -275,19 +275,19 @@ const RecordAllModal: React.FC<RecordAllModalProps> = ({
                         ${recordings[modalPageIdx]
                           ? 'bg-orange-500 hover:bg-orange-600 text-white'
                           : 'bg-purple-500 hover:bg-purple-600 text-white hover:scale-105 transform'
-                        } disabled:bg-gray-300 disabled:cursor-not-allowed disabled:scale-100`}
+                        } disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed disabled:scale-100`}
                     >
                       <MicrophoneIcon className="w-5 h-5" />
                       {recordings[modalPageIdx] ? 'Re-record' : 'Record'}
                     </button>
                   )}
 
-                  {/* Save button — always visible, disabled while recording or nothing recorded yet */}
+                  {/* Save button */}
                   <button
                     onClick={() => { onRecordingsSaved(recordings); onClose(); }}
                     disabled={recordedCount === 0 || recordState === 'recording'}
                     title={recordedCount === 0 ? 'Record at least one page first' : `Save ${recordedCount} recording${recordedCount !== 1 ? 's' : ''} and close`}
-                    className="flex items-center justify-center gap-1.5 px-3 py-3 rounded-full bg-green-500 hover:bg-green-600 text-white font-semibold text-sm transition-colors shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-gray-300"
+                    className="flex items-center justify-center gap-1.5 px-3 py-3 rounded-full bg-green-500 hover:bg-green-600 text-white font-semibold text-sm transition-colors shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-600"
                   >
                     <CheckCircleIcon className="w-5 h-5" />
                     Save
@@ -297,7 +297,7 @@ const RecordAllModal: React.FC<RecordAllModalProps> = ({
                 {modalPageIdx < totalPages - 1 ? (
                   <button
                     onClick={handleNext}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-gray-100 text-gray-600 font-semibold text-sm hover:bg-gray-200 transition-colors"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >
                     Next <ChevronRightIcon className="w-4 h-4" />
                   </button>

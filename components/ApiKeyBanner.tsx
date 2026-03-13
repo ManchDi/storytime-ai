@@ -57,17 +57,17 @@ const ApiKeyBanner: React.FC<ApiKeyBannerProps> = ({ service, onKeySubmit, onDis
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-amber-50 border-b-2 border-amber-300 px-4 py-3 shadow-md">
+    <div className="fixed top-0 left-0 right-0 z-50 bg-amber-50 dark:bg-amber-900/40 border-b-2 border-amber-300 dark:border-amber-700 px-4 py-3 shadow-md">
       <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-start sm:items-center gap-3">
 
         {/* Icon + title */}
-        <div className="flex items-center gap-2 text-amber-800 shrink-0">
+        <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200 shrink-0">
           {config.icon}
           <span className="font-semibold text-sm">{config.title}</span>
         </div>
 
         {/* Description */}
-        <p className="text-amber-700 text-sm flex-1">
+        <p className="text-amber-700 dark:text-amber-300 text-sm flex-1">
           {config.showKeyInput ? (
             <>
               Add your free{' '}
@@ -75,7 +75,7 @@ const ApiKeyBanner: React.FC<ApiKeyBannerProps> = ({ service, onKeySubmit, onDis
                 href="https://aistudio.google.com/app/apikey"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline font-medium hover:text-amber-900"
+                className="underline font-medium hover:text-amber-900 dark:hover:text-amber-100"
               >
                 Gemini API key
               </a>{' '}
@@ -95,7 +95,7 @@ const ApiKeyBanner: React.FC<ApiKeyBannerProps> = ({ service, onKeySubmit, onDis
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSubmit()}
               placeholder="AIza..."
-              className="flex-1 sm:w-56 px-3 py-1.5 text-sm border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+              className="flex-1 sm:w-56 px-3 py-1.5 text-sm border border-amber-300 dark:border-amber-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-500"
             />
             <button
               onClick={handleSubmit}
@@ -110,7 +110,7 @@ const ApiKeyBanner: React.FC<ApiKeyBannerProps> = ({ service, onKeySubmit, onDis
         {/* Dismiss */}
         <button
           onClick={onDismiss}
-          className="text-amber-600 hover:text-amber-800 shrink-0"
+          className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 shrink-0"
           aria-label="Dismiss"
         >
           <XMarkIcon className="w-5 h-5" />

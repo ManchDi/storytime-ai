@@ -95,16 +95,16 @@ const SplitButton: React.FC<{
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute bottom-full mb-2 left-0 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 min-w-[160px]">
+        <div className="absolute bottom-full mb-2 left-0 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-20 min-w-[160px]">
           <button
             onClick={() => { onOption1(); setOpen(false); }}
-            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:text-purple-600 dark:hover:text-purple-300 transition-colors"
           >
             {option1Label}
           </button>
           <button
             onClick={() => { onOption2(); setOpen(false); }}
-            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 border-t border-gray-100 transition-colors"
+            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:text-purple-600 dark:hover:text-purple-300 border-t border-gray-100 dark:border-gray-700 transition-colors"
           >
             {option2Label}
           </button>
@@ -242,7 +242,7 @@ const Controls: React.FC<ControlsProps> = ({
       <button
         onClick={onSavePDF}
         disabled={isSavingPDF || isRecording || isRecordingAll || isBusy}
-        className="flex items-center gap-2 px-5 py-2 bg-white border-2 border-purple-300 text-purple-600 font-semibold rounded-full shadow-sm hover:bg-purple-50 hover:border-purple-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+        className="flex items-center gap-2 px-5 py-2 bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-700 text-purple-600 dark:text-purple-300 font-semibold rounded-full shadow-sm hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:border-purple-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
       >
         {isSavingPDF ? (
           <span className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin inline-block" />

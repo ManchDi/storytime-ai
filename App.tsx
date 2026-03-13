@@ -9,10 +9,11 @@ import StoryViewer from './components/StoryViewer';
 import Controls from './components/Controls';
 import ApiKeyBanner from './components/ApiKeyBanner';
 import StoryModeBanner from './components/StoryModeBanner';
-import { SparklesIcon, SpeakerWaveIcon } from '@heroicons/react/24/solid';
+import { SparklesIcon, SpeakerWaveIcon, MoonIcon, SunIcon } from '@heroicons/react/24/solid';
 import { generateStoryPDF } from './services/pdfService';
 import DownloadModal from './components/DownloadModal';
 import RecordAllModal from './components/RecordAllModal';
+import { useDarkMode } from './hooks/useDarkMode';
 
 const SESSIONS_KEY = 'pagekin_sessions';
 const MAX_SAVED_SESSIONS = 5;
@@ -57,6 +58,7 @@ function clearSession() {
 
 const App: React.FC = () => {
   // ── Screen management ──────────────────────────────────────────────────────
+  const [isDark, toggleDark] = useDarkMode();
   const [screen, setScreen] = useState<AppScreen>('home');
   const [storyConfig, setStoryConfig] = useState<StoryConfig | null>(null);
   const [savedSession, setSavedSession] = useState<SavedSession | null>(loadSession);
@@ -612,28 +614,50 @@ const handleGoHome = useCallback(() => {
     }
   }, [handleGenerateAllAndDownload]);
 
+  // ── Dark mode toggle button (always visible) ───────────────────────────────
+  const DarkToggle = () => (
+    <button
+      onClick={toggleDark}
+      className="fixed top-3 right-3 z-40 p-2.5 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md border border-purple-200 dark:border-purple-700 text-purple-500 dark:text-yellow-300 hover:scale-110 transition-all duration-200"
+      aria-label="Toggle dark mode"
+    >
+      {isDark ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
+    </button>
+  );
+
   // ── Render ─────────────────────────────────────────────────────────────────
   if (screen === 'home') {
     return (
-      <HomeScreen
-        onGenerate={handleGenerate}
-        savedSessions={allSavedSessions}
-        onContinueSession={handleContinueSession}
-        onDeleteSession={handleDeleteSession}
-        onDownloadSessionPDF={handleDownloadSessionPDF}
-        onClearSession={() => { clearSession(); setSavedSession(null); setAllSavedSessions([]); }}
-      />
+      <>
+        <DarkToggle />
+        <HomeScreen
+          onGenerate={handleGenerate}
+          savedSessions={allSavedSessions}
+          onContinueSession={handleContinueSession}
+          onDeleteSession={handleDeleteSession}
+          onDownloadSessionPDF={handleDownloadSessionPDF}
+          onClearSession={() => { clearSession(); setSavedSession(null); setAllSavedSessions([]); }}
+        />
+      </>
     );
   }
 
   if (screen === 'loading' && storyConfig) {
-    return <LoadingScreen config={storyConfig} />;
+    return (
+      <>
+        <DarkToggle />
+        <LoadingScreen config={storyConfig} />
+      </>
+    );
   }
 
   const currentPage = storyPages[currentPageIndex];
   const hasNext = storyConfig ? currentPageIndex < storyConfig.pageCount - 1 : false;
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 text-gray-800 p-3 sm:p-6 md:p-8 flex flex-col items-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 dark:from-gray-950 dark:to-purple-950 text-gray-800 dark:text-gray-100 p-3 sm:p-6 md:p-8 flex flex-col items-center">
+
+      {/* Dark mode toggle */}
+      <DarkToggle />
 
       {/* Quota banner */}
       {showApiKeyBanner && (
