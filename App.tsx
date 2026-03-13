@@ -9,7 +9,7 @@ import StoryViewer from './components/StoryViewer';
 import Controls from './components/Controls';
 import ApiKeyBanner from './components/ApiKeyBanner';
 import StoryModeBanner from './components/StoryModeBanner';
-import { SparklesIcon } from '@heroicons/react/24/solid';
+import { SparklesIcon, SpeakerWaveIcon } from '@heroicons/react/24/solid';
 import { generateStoryPDF } from './services/pdfService';
 import DownloadModal from './components/DownloadModal';
 import RecordAllModal from './components/RecordAllModal';
@@ -75,6 +75,7 @@ const App: React.FC = () => {
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
   const [generatingProgress, setGeneratingProgress] = useState(0);
+  const [showTTSTransitionBanner, setShowTTSTransitionBanner] = useState(false);
 
   // ── API key / quota ────────────────────────────────────────────────────────
   const [userApiKey, setUserApiKey] = useState<string | undefined>(undefined);
@@ -255,15 +256,15 @@ const App: React.FC = () => {
         alert('Sorry, PDF generation failed. Please try again.');
       }
     } else {
-      // Load the session into story state, then open the download modal (generate-all flow)
+      // Navigate to story screen so the user sees progress, then generate directly
       setStoryConfig(session.config);
       setStoryPages(session.pages);
       setCurrentPageIndex(session.currentPageIndex);
       setScreen('story');
-      // Small delay to let state settle, then open the download modal
-      setTimeout(() => setShowDownloadModal(true), 100);
+      // Pass session data directly — avoids stale closure race condition
+      await handleGenerateAllAndDownload(session.pages, session.config);
     }
-  }, []);
+  }, [handleGenerateAllAndDownload]);
 
   // ── Navigation ─────────────────────────────────────────────────────────────
   const handleNextPage = useCallback(async () => {
@@ -351,6 +352,11 @@ const handleGoHome = useCallback(() => {
       setIsLoadingTTS(false);
       if (playAllStopRef.current) return;
 
+      // Resume AudioContext if it was auto-suspended by the browser
+      if (audioContextRef.current?.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
+
       return new Promise(resolve => {
         setIsReading(true);
         const source = audioContextRef.current!.createBufferSource();
@@ -409,8 +415,35 @@ const handleGoHome = useCallback(() => {
 
       setCurrentPageIndex(pageIdx);
 
-      // Play the page
-      await playSinglePage(pageIdx);
+      // Kick off image generation in background if needed (don't await — fire and forget)
+      if (storyConfig.generateImages) {
+        const currentPages = storyPagesRef.current;
+        if (currentPages[pageIdx] && !currentPages[pageIdx].imageUrl) {
+          loadImageForPage(pageIdx, currentPages);
+        }
+        // Also pre-fetch next page image
+        const nextIdx = pageIdx + 1;
+        if (nextIdx < storyConfig.pageCount) {
+          const nextPage = currentPages[nextIdx];
+          if (nextPage?.imagePrompt && !nextPage.imageUrl) {
+            loadImageForPage(nextIdx, currentPages);
+          }
+        }
+      }
+
+      // Brief grace period to let image start loading before reading begins
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      if (playAllStopRef.current) break;
+
+      // Detect transition from user recording to TTS — notify user
+      const pageForPlay = storyPagesRef.current[pageIdx];
+      const prevPageHadRecording = pageIdx > currentPageIndexRef.current &&
+        storyPagesRef.current[pageIdx - 1]?.userRecordingUrl &&
+        !pageForPlay?.userRecordingUrl;
+      if (prevPageHadRecording) {
+        setShowTTSTransitionBanner(true);
+        setTimeout(() => setShowTTSTransitionBanner(false), 4000);
+      }
       if (playAllStopRef.current) break;
 
       // 200ms pause between pages then advance
@@ -421,7 +454,7 @@ const handleGoHome = useCallback(() => {
     }
 
     setIsPlayingAll(false);
-  }, [isPlayingAll, isReading, storyConfig, stopReading, generateNextPage, playSinglePage]);
+  }, [isPlayingAll, isReading, storyConfig, stopReading, generateNextPage, playSinglePage, loadImageForPage, setShowTTSTransitionBanner]);
 
   // ── Recording (single page) ────────────────────────────────────────────────
   const startRecordingPage = useCallback(async (pageIndex: number): Promise<string> => {
@@ -529,19 +562,23 @@ const handleGoHome = useCallback(() => {
     }
   }, [storyPages, storyConfig]);
 
-  const handleGenerateAllAndDownload = useCallback(async () => {
-    if (!storyConfig) return;
+  const handleGenerateAllAndDownload = useCallback(async (
+    overridePages?: StoryPage[],
+    overrideConfig?: StoryConfig
+  ) => {
+    const config = overrideConfig ?? storyConfig;
+    if (!config) return;
     setIsGeneratingAll(true);
-    let allPages = [...storyPages];
+    let allPages = [...(overridePages ?? storyPages)];
     setGeneratingProgress(allPages.filter(p => p.text && !p.isGenerating).length);
 
-    for (let i = 0; i < storyConfig.pageCount; i++) {
+    for (let i = 0; i < config.pageCount; i++) {
       if (allPages[i]?.text && !allPages[i]?.isGenerating) continue;
       try {
         const previousTexts = allPages.slice(0, i).map(p => p.text).filter(Boolean);
-        const { text, imagePrompt } = await generateStoryPage(storyConfig, i, previousTexts);
+        const { text, imagePrompt } = await generateStoryPage(config, i, previousTexts);
         let imageUrl: string | undefined;
-        if (storyConfig.generateImages) {
+        if (config.generateImages) {
           try { imageUrl = await generateImage(imagePrompt); } catch { /* skip */ }
         }
         const newPage = { id: i + 1, text, imagePrompt, imageUrl };
@@ -608,6 +645,16 @@ const handleGoHome = useCallback(() => {
           totalPages={storyConfig.pageCount}
           onStop={stopReading}
         />
+      )}
+
+      {/* Recording → TTS transition notification */}
+      {showTTSTransitionBanner && (
+        <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-3 px-4 pointer-events-none">
+          <div className="bg-purple-600 text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-lg flex items-center gap-2 animate-pulse">
+            <SpeakerWaveIcon className="w-4 h-4" />
+            Your recordings are done — continuing with AI voice
+          </div>
+        </div>
       )}
 
       <header className={`w-full max-w-5xl mb-6 text-center ${isPlayingAll ? 'mt-12' : ''}`}>

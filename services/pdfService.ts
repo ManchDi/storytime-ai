@@ -140,7 +140,7 @@ export async function generateStoryPDF(
   config: StoryConfig
 ): Promise<void> {
   // Only pages that are fully ready: have text, have image, not still generating
-  const readyPages = pages.filter(p => p.text && p.imageUrl && !p.isGenerating);
+  const readyPages = pages.filter(p => p.text && !p.isGenerating);
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a5' });
 
