@@ -137,6 +137,16 @@ const SavedSessionCard: React.FC<{
   );
 };
 
+const DEMO_PRESET = {
+  childName: 'Alex',
+  theme: 'A curious little robot who discovers a garden for the first time and learns what it means to grow',
+  pageCount: 5 as const,
+  includeChild: true,
+  mode: 'linear' as StoryMode,
+  ageRange: '5-7' as AgeRange,
+  generateImages: true,
+};
+
 const HomeScreen: React.FC<HomeScreenProps> = ({ onGenerate, savedSessions, onContinueSession, onDeleteSession, onDownloadSessionPDF, onClearSession }) => {
   const [childName, setChildName] = useState('');
   const [theme, setTheme] = useState('');
@@ -150,6 +160,20 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onGenerate, savedSessions, onCo
   const [themeAttempts, setThemeAttempts] = useState(0);
   const [previousThemes, setPreviousThemes] = useState<string[]>([]);
   const [suggestedTheme, setSuggestedTheme] = useState<string | null>(null);
+
+  const handleTryDemo = () => {
+    setChildName(DEMO_PRESET.childName);
+    setTheme(DEMO_PRESET.theme);
+    setPageCount(DEMO_PRESET.pageCount);
+    setIncludeChild(DEMO_PRESET.includeChild);
+    setMode(DEMO_PRESET.mode);
+    setAgeRange(DEMO_PRESET.ageRange);
+    setGenerateImages(DEMO_PRESET.generateImages);
+    // Scroll the form into view smoothly
+    setTimeout(() => {
+      document.getElementById('story-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  };
 
   const handleGenerateTheme = async () => {
     setIsGeneratingTheme(true);
@@ -186,13 +210,37 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onGenerate, savedSessions, onCo
       <div className="w-full max-w-lg">
 
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <h1 className="text-5xl md:text-6xl text-purple-600 dark:text-purple-300 font-fredoka flex items-center justify-center gap-3 mb-2">
             <SparklesIcon className="w-10 h-10 text-yellow-400" />
             Pagekin
             <SparklesIcon className="w-10 h-10 text-yellow-400" />
           </h1>
-          <p className="text-lg text-purple-500 dark:text-purple-400">Every child deserves their own story</p>
+          <p className="text-lg text-purple-500 dark:text-purple-400 mb-5">Every child deserves their own story</p>
+
+          {/* Feature pills */}
+          <div className="flex flex-wrap justify-center gap-2 mb-6">
+            {[
+              { emoji: '🎨', label: 'AI illustrations' },
+              { emoji: '🔊', label: 'Read aloud' },
+              { emoji: '🎙️', label: 'Voice recording' },
+              { emoji: '📄', label: 'PDF export' },
+            ].map(({ emoji, label }) => (
+              <span key={label} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/70 dark:bg-gray-800/70 border border-purple-200 dark:border-purple-800 text-xs font-semibold text-purple-700 dark:text-purple-300 backdrop-blur-sm shadow-sm">
+                {emoji} {label}
+              </span>
+            ))}
+          </div>
+
+          {/* Demo button */}
+          <button
+            onClick={handleTryDemo}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-bold rounded-full shadow-md hover:scale-105 transform transition-transform duration-200"
+          >
+            <SparklesIcon className="w-4 h-4" />
+            Try a demo story
+          </button>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">Prefills the form with a ready-to-go story — just hit Generate</p>
         </div>
 
         {/* Saved sessions */}
@@ -220,7 +268,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onGenerate, savedSessions, onCo
         )}
 
         {/* Form */}
-        <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-3xl shadow-lg border border-purple-200 dark:border-purple-800 p-4 sm:p-6 space-y-5">
+        <div id="story-form" className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-3xl shadow-lg border border-purple-200 dark:border-purple-800 p-4 sm:p-6 space-y-5">
 
           {/* Child's name */}
           <div>
