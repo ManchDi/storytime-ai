@@ -2,7 +2,7 @@
 
 > AI-powered personalized storybooks for children — generate, illustrate, narrate, and export in minutes.
 
-**[Live Demo →](https://storytime-ai-eta.vercel.app)**
+**[Live Demo →](https://pagekin.vercel.app/)**
 
 <table>
   <tr>
